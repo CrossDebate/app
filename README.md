@@ -25,28 +25,7 @@ O CrossDebate opera com uma arquitetura cliente-servidor:
 
 **Fluxo de Interação Principal:**
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant Frontend
-    participant Backend
-    participant GGUF Model
-    participant HoT
 
-    User->>Frontend: Envia Mensagem no Chat
-    Frontend->>Backend: Requisição API (/chat) com Mensagem + Estado HoT Atual
-    Backend->>HoT: Consulta estado atual
-    Backend->>GGUF Model: Envia Prompt (considerando HoT)
-    GGUF Model-->>Backend: Gera Resposta
-    Backend->>HoT: Atualiza HoT com nova interação/resposta
-    Backend-->>Frontend: Retorna Resposta + HoT Atualizado
-    Frontend->>User: Exibe Resposta e Visualização do HoT
-    User->>Frontend: (Opcional) Ajusta Hiperarestas/Nós no HoT
-    Frontend->>Backend: Requisição API (/hot/adjust) com Ajustes
-    Backend->>HoT: Aplica Ajustes do Usuário
-    User->>Frontend: Envia Próxima Mensagem... (Ciclo recomeça, considerando HoT ajustado)
-Use code with caution.
-Markdown
 Instalação
 Pré-requisitos
 Python 3.10+
@@ -54,6 +33,7 @@ Python 3.10+
 pip (Gerenciador de pacotes Python)
 
 Git
+![Uploading crossdebate.png…]()
 
 Passos
 Clonar o Repositório:

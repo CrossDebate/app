@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance - CrossDebate</title>
+
+    <!-- Resource hints -->
+    <link rel="preload" href="css/style.css" as="style">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/chart.js" as="script">
+
+    <!-- External CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Specific Styles for Performance Page -->
+    <style>
+        .performance-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius-lg);
+            padding: 20px;
+            text-align: center;
+            box-shadow: var(--box-shadow);
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .metric-card i {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 5px 0;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: var(--text-color);
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            background-color: var(--input-bg);
+            border-radius: var(--border-radius-sm);
+            overflow: hidden;
+            height: 10px;
+            margin-top: 15px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary-color);
+            width: 0%; /* Will be set by JS */
+            transition: width 0.5s ease-in-out;
+            border-radius: var(--border-radius-sm);
+        }
+
+        .charts-grid { /* Reusing class from visualizations */
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .chart-card { /* Reusing class from visualizations */
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius-lg);
+            padding: 20px;
+            box-shadow: var(--box-shadow);
+            border: 1px solid var(--border-color);
+            min-height: var(--chart-height, 350px);
+            display: flex;
+            flex-direction: column;
+        }
+
+         .chart-card h4 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-align: center;
+            color: var(--primary-color);
+        }
+
+        .chart-container {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        .chart-container canvas {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .logs-container {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            color: var(--text-color);
+        }
+
+        .log-item {
+            padding: 5px 0;
+            border-bottom: 1px dashed var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .log-item:last-child {
+            border-bottom: none;
+        }
+        .log-time { color: var(--secondary-color); white-space: nowrap; }
+        .log-message { flex-grow: 1; }
+        .log-level { font-weight: bold; padding: 2px 6px; border-radius: var(--border-radius-sm); font-size: 0.75rem; }
+        .log-level.info { background-color: var(--info-color); color: white; }
+        .log-level.warning { background-color: var(--warning-color); color: #333; }
+        .log-level.error { background-color: var(--danger-color); color: white; }
+        .log-level.success { background-color: var(--success-color); color: white; }
+
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar (Identical structure) -->
+        <div class="sidebar">
+            <div class="nav-header">
+                <h2>CrossDebate</h2>
+            </div>
+            <ul>
+                 <li>
+                    <a href="index.html">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="analise.html">
+                        <i class="fas fa-microscope"></i>
+                        <span>Análise HoT</span>
+                    </a>
+                </li>
+                 <li>
+                    <a href="visualizacao.html">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Visualizações</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="performance.html" class="active"> <!-- Mark as active -->
+                        <i class="fas fa-chart-line"></i>
+                        <span>Performance</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="configuracoes.html">
+                        <i class="fas fa-cog"></i>
+                        <span>Configurações</span>
+                    </a>
+                </li>
+            </ul>
+             <!-- Sidebar Toggle Button -->
+             <!-- <button class="sidebar-toggle"><i class="fas fa-chevron-left"></i></button> -->
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <div class="theme-toggle" id="themeToggle" title="Alternar Tema">
+                <i class="fas fa-moon"></i>
+            </div>
+
+            <h1>Monitoramento de Performance</h1>
+            <p>Acompanhe as métricas de desempenho do sistema e dos modelos GGUF.</p>
+
+            <!-- Metrics Grid -->
+            <div class="metrics-grid">
+                <div class="metric-card draggable">
+                    <i class="fas fa-stopwatch"></i>
+                    <div class="metric-value" id="responseTimeValue">-- ms</div>
+                    <div class="metric-label">Tempo Médio de Resposta (API)</div>
+                    <!-- Optional: Add a small trend indicator or sparkline -->
+                </div>
+                <div class="metric-card draggable">
+                    <i class="fas fa-microchip"></i>
+                    <div class="metric-value" id="cpuUsageValue">-- %</div>
+                    <div class="metric-label">Uso Médio de CPU</div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="cpuProgressBar"></div>
+                    </div>
+                </div>
+                <div class="metric-card draggable">
+                    <i class="fas fa-memory"></i>
+                    <div class="metric-value" id="memoryUsageValue">-- %</div>
+                    <div class="metric-label">Uso Médio de Memória</div>
+                     <div class="progress-bar-container">
+                        <div class="progress-bar" id="memoryProgressBar"></div>
+                    </div>
+                </div>
+                <div class="metric-card draggable">
+                    <i class="fas fa-brain"></i>
+                    <div class="metric-value" id="modelLatencyValue">-- ms</div>
+                    <div class="metric-label">Latência Média do Modelo (GGUF)</div>
+                </div>
+                 <div class="metric-card draggable">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div class="metric-value" id="errorRateValue">-- %</div>
+                    <div class="metric-label">Taxa de Erro (API)</div>
+                </div>
+                 <div class="metric-card draggable">
+                    <i class="fas fa-users"></i>
+                    <div class="metric-value" id="activeUsersValue">--</div>
+                    <div class="metric-label">Usuários Ativos</div>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+             <div class="charts-grid">
+                <div class="chart-card draggable">
+                    <h4>Tempo de Resposta da API (Histórico)</h4>
+                    <div class="chart-container">
+                        <canvas id="apiResponseTimeChart"></canvas>
+                        <div class="loading-spinner" id="apiResponseTimeChartSpinner"></div>
+                    </div>
+                </div>
+                 <div class="chart-card draggable">
+                    <h4>Latência do Modelo GGUF (Histórico)</h4>
+                    <div class="chart-container">
+                        <canvas id="modelLatencyChart"></canvas>
+                        <div class="loading-spinner" id="modelLatencyChartSpinner"></div>
+                    </div>
+                </div>
+                 <div class="chart-card draggable">
+                    <h4>Uso de CPU e Memória (Histórico)</h4>
+                    <div class="chart-container">
+                        <canvas id="resourceUsageChart"></canvas>
+                        <div class="loading-spinner" id="resourceUsageChartSpinner"></div>
+                    </div>
+                </div>
+                 <div class="chart-card draggable">
+                    <h4>Taxa de Erros (Histórico)</h4>
+                    <div class="chart-container">
+                        <canvas id="errorRateChart"></canvas>
+                        <div class="loading-spinner" id="errorRateChartSpinner"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Logs -->
+            <div class="card" style="margin-top: 30px;">
+                 <h4><i class="fas fa-file-alt"></i> Logs Recentes do Sistema</h4>
+                 <div class="logs-container" id="logsContainer">
+                     <div class="loading-spinner" id="logsSpinner"></div>
+                     <!-- Logs serão inseridos aqui por JS -->
+                 </div>
+            </div>
+
+        </div> <!-- Fim .main-content -->
+    </div> <!-- Fim .app-container -->
+
+    <!-- Elemento para Notificações -->
+    <div class="notification" id="notification">
+        <i id="notificationIcon" class="fas fa-check-circle"></i>
+        <span id="notificationText"></span>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script> <!-- Adapter for time scale -->
+
+    <!-- Application Scripts -->
+    <script src="js/interactivity.js" defer></script>
+    <script src="js/performance.js" defer></script> <!-- Logic for this page -->
+
+</body>
+</html>

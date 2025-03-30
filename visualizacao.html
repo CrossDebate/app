@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualização - CrossDebate</title>
+
+    <!-- Resource hints -->
+    <link rel="preload" href="css/style.css" as="style">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/chart.js" as="script"> <!-- Preload Chart.js -->
+    <!-- Add preload for Plotly if used extensively -->
+    <!-- <link rel="preload" href="https://cdn.plot.ly/plotly-latest.min.js" as="script"> -->
+
+    <!-- External CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Specific Styles for Visualization Page -->
+    <style>
+        .visualization-container {
+            max-width: 1400px; /* Allow wider content */
+            margin: 0 auto;
+        }
+
+        .filters-bar {
+            background-color: var(--card-bg);
+            padding: 15px 20px;
+            border-radius: var(--border-radius-md);
+            margin-bottom: 20px;
+            box-shadow: var(--box-shadow);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-wrap: wrap; /* Allow filters to wrap on smaller screens */
+            gap: 15px;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .filter-select, .filter-input {
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
+            background: var(--input-bg);
+            color: var(--text-color);
+            font-family: inherit;
+            min-width: 150px; /* Minimum width for selects */
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); /* Responsive grid */
+            gap: 20px;
+        }
+
+        .chart-card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius-lg);
+            padding: 20px;
+            box-shadow: var(--box-shadow);
+            border: 1px solid var(--border-color);
+            min-height: var(--chart-height, 400px); /* Use variable or default */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-card h4 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-align: center;
+            color: var(--primary-color);
+        }
+
+        .chart-container {
+            flex-grow: 1; /* Allow chart canvas/div to fill space */
+            position: relative; /* Needed for Chart.js responsiveness */
+        }
+
+        .chart-container canvas {
+            max-width: 100%; /* Ensure canvas doesn't overflow */
+            height: auto;
+        }
+
+        /* Loading state for charts */
+        .chart-card .loading-spinner {
+            margin: auto; /* Center spinner */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar (Identical structure) -->
+        <div class="sidebar">
+            <div class="nav-header">
+                <h2>CrossDebate</h2>
+            </div>
+            <ul>
+                 <li>
+                    <a href="index.html">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="analise.html">
+                        <i class="fas fa-microscope"></i>
+                        <span>Análise HoT</span>
+                    </a>
+                </li>
+                 <li>
+                    <a href="visualizacao.html" class="active"> <!-- Mark as active -->
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Visualizações</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="performance.html">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Performance</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="configuracoes.html">
+                        <i class="fas fa-cog"></i>
+                        <span>Configurações</span>
+                    </a>
+                </li>
+            </ul>
+             <!-- Sidebar Toggle Button -->
+             <!-- <button class="sidebar-toggle"><i class="fas fa-chevron-left"></i></button> -->
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <div class="theme-toggle" id="themeToggle" title="Alternar Tema">
+                <i class="fas fa-moon"></i>
+            </div>
+
+            <h1>Visualização de Dados</h1>
+            <p>Explore as métricas e padrões dos debates através de gráficos interativos.</p>
+
+            <!-- Filters Bar -->
+            <div class="filters-bar">
+                <div class="filter-group">
+                    <label for="debateTypeFilter" class="filter-label">Tipo de Debate:</label>
+                    <select id="debateTypeFilter" class="filter-select">
+                        <option value="all">Todos</option>
+                        <option value="politics">Política</option>
+                        <option value="science">Ciência</option>
+                        <option value="philosophy">Filosofia</option>
+                        <!-- Add more types as needed -->
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="timeRangeFilter" class="filter-label">Período:</label>
+                    <select id="timeRangeFilter" class="filter-select">
+                        <option value="1h">Última Hora</option>
+                        <option value="24h">Últimas 24 Horas</option>
+                        <option value="7d">Últimos 7 Dias</option>
+                        <option value="30d">Últimos 30 Dias</option>
+                        <option value="all">Todo o Período</option>
+                    </select>
+                </div>
+                 <div class="filter-group">
+                    <label for="metricFilter" class="filter-label">Métrica Principal:</label>
+                    <select id="metricFilter" class="filter-select">
+                        <option value="engagement">Engajamento</option>
+                        <option value="sentiment">Sentimento</option>
+                        <option value="coherence">Coerência</option>
+                        <!-- Add more metrics -->
+                    </select>
+                </div>
+                <button id="applyFiltersButton" class="button primary">Aplicar Filtros</button>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="charts-grid">
+                <!-- Chart Card 1: Example Line Chart -->
+                <div class="chart-card draggable">
+                    <h4>Evolução do Engajamento</h4>
+                    <div class="chart-container">
+                        <canvas id="engagementChart"></canvas>
+                        <div class="loading-spinner" id="engagementChartSpinner"></div>
+                    </div>
+                </div>
+
+                <!-- Chart Card 2: Example Bar Chart -->
+                <div class="chart-card draggable">
+                    <h4>Distribuição de Sentimento</h4>
+                    <div class="chart-container">
+                        <canvas id="sentimentChart"></canvas>
+                         <div class="loading-spinner" id="sentimentChartSpinner"></div>
+                    </div>
+                </div>
+
+                <!-- Chart Card 3: Example Pie Chart -->
+                <div class="chart-card draggable">
+                    <h4>Tópicos por Debate</h4>
+                    <div class="chart-container">
+                        <canvas id="topicDistributionChart"></canvas>
+                         <div class="loading-spinner" id="topicDistributionChartSpinner"></div>
+                    </div>
+                </div>
+
+                <!-- Chart Card 4: Example Radar Chart -->
+                 <div class="chart-card draggable">
+                    <h4>Métricas de Qualidade por Modelo</h4>
+                    <div class="chart-container">
+                        <canvas id="modelQualityRadarChart"></canvas>
+                         <div class="loading-spinner" id="modelQualityRadarChartSpinner"></div>
+                    </div>
+                </div>
+
+                 <!-- Add more chart cards as needed -->
+                 <div class="chart-card draggable">
+                    <h4>Correlação de Fatores</h4>
+                    <div class="chart-container">
+                        <canvas id="correlationChart"></canvas>
+                         <div class="loading-spinner" id="correlationChartSpinner"></div>
+                    </div>
+                </div>
+                 <div class="chart-card draggable">
+                    <h4>Impacto Demográfico (Exemplo)</h4>
+                    <div class="chart-container">
+                        <canvas id="demographicImpactChart"></canvas>
+                         <div class="loading-spinner" id="demographicImpactChartSpinner"></div>
+                    </div>
+                </div>
+
+            </div> <!-- Fim .charts-grid -->
+
+        </div> <!-- Fim .main-content -->
+    </div> <!-- Fim .app-container -->
+
+    <!-- Elemento para Notificações -->
+    <div class="notification" id="notification">
+        <i id="notificationIcon" class="fas fa-check-circle"></i>
+        <span id="notificationText"></span>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Charting Library (Chart.js included, Plotly optional) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- <script src="https://cdn.plot.ly/plotly-latest.min.js"></script> -->
+
+    <!-- Application Scripts -->
+    <script src="js/interactivity.js" defer></script>
+    <script src="js/visualizations.js" defer></script> <!-- Logic for this page -->
+
+</body>
+</html>
